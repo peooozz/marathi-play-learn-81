@@ -5,8 +5,6 @@ import { MarathiLetter } from "@/data/marathiLetters";
 interface FlashCardProps {
   letter: MarathiLetter;
   index: number;
-  onSelect?: (letter: MarathiLetter) => void;
-  isSelected?: boolean;
 }
 
 // Vibrant colors matching the reference site
@@ -21,7 +19,7 @@ const flashcardColors = [
   "bg-kid-green",
 ];
 
-export function FlashCard({ letter, index, onSelect, isSelected }: FlashCardProps) {
+export function FlashCard({ letter, index }: FlashCardProps) {
   const colorClass = flashcardColors[index % flashcardColors.length];
   
   const playPronunciation = () => {
@@ -38,13 +36,10 @@ export function FlashCard({ letter, index, onSelect, isSelected }: FlashCardProp
       transition={{ delay: index * 0.03, type: "spring", stiffness: 200 }}
       whileHover={{ scale: 1.08, y: -8 }}
       whileTap={{ scale: 0.95 }}
-      onClick={() => {
-        playPronunciation();
-        onSelect?.(letter);
-      }}
+      onClick={playPronunciation}
       className={`
         relative cursor-pointer rounded-2xl ${colorClass} p-1
-        ${isSelected ? "ring-4 ring-foreground/30 shadow-hover" : "shadow-card"}
+        shadow-card hover:shadow-hover
         transition-all duration-300 overflow-hidden
         aspect-square w-full max-w-[120px]
       `}
