@@ -1,17 +1,31 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, FileText, HelpCircle, Volume2, Pencil } from "lucide-react";
+import { BookOpen, FileText, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashCard } from "@/components/FlashCard";
 import { WorksheetSection } from "@/components/WorksheetSection";
 import { TracingSection } from "@/components/TracingSection";
 import { FloatingDecorations } from "@/components/FloatingDecorations";
-import { swar, vyanjan } from "@/data/marathiLetters";
+import { LetterDetailModal } from "@/components/LetterDetailModal";
+import { swar, vyanjan, MarathiLetter } from "@/data/marathiLetters";
 
 export default function Index() {
   const [showLetterType, setShowLetterType] = useState<"swar" | "vyanjan">("swar");
   const [isTracingOpen, setIsTracingOpen] = useState(false);
+  const [selectedLetter, setSelectedLetter] = useState<MarathiLetter | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleLetterClick = (letter: MarathiLetter) => {
+    setSelectedLetter(letter);
+    setIsModalOpen(true);
+    
+    // Play pronunciation
+    const utterance = new SpeechSynthesisUtterance(letter.letter);
+    utterance.lang = "mr-IN";
+    utterance.rate = 0.6;
+    speechSynthesis.speak(utterance);
+  };
 
   return (
     <div className="min-h-screen gradient-warm relative">
@@ -57,6 +71,13 @@ export default function Index() {
 
       {/* Tracing Section Modal */}
       <TracingSection isOpen={isTracingOpen} onClose={() => setIsTracingOpen(false)} />
+      
+      {/* Letter Detail Modal */}
+      <LetterDetailModal 
+        letter={selectedLetter} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
 
       {/* Rainbow Title */}
       <div className="text-center py-6 relative z-10">
@@ -65,13 +86,30 @@ export default function Index() {
           animate={{ opacity: 1, scale: 1 }}
           className="text-4xl md:text-5xl font-bold font-devanagari inline-flex items-center gap-3"
         >
-          <span className="text-4xl">🌈</span>
+          <motion.span 
+            className="text-4xl"
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          >
+            🌈
+          </motion.span>
           <span className="text-gradient">मराठी मूळाक्षरे शिका!</span>
-          <span className="text-4xl">⭐</span>
+          <motion.span 
+            className="text-4xl"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            ⭐
+          </motion.span>
         </motion.h2>
-        <p className="text-muted-foreground font-devanagari mt-2">
+        <motion.p 
+          className="text-muted-foreground font-devanagari mt-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
           🌟 चित्र आणि उच्चार पाहण्यासाठी अक्षरावर क्लिक करा! 🌟
-        </p>
+        </motion.p>
       </div>
 
       {/* Main Content with Tabs */}
@@ -100,22 +138,25 @@ export default function Index() {
             <TabsContent value="flashcards" className="mt-0">
               {/* Letter type toggle */}
               <div className="flex justify-center mb-6">
-                <div className="bg-card rounded-full p-1 shadow-card inline-flex">
+                <motion.div 
+                  className="bg-card rounded-full p-1 shadow-card inline-flex"
+                  whileHover={{ scale: 1.02 }}
+                >
                   <Button
                     variant={showLetterType === "swar" ? "default" : "ghost"}
                     onClick={() => setShowLetterType("swar")}
                     className="rounded-full font-devanagari px-6"
                   >
-                    स्वर
+                    स्वर ({swar.length})
                   </Button>
                   <Button
                     variant={showLetterType === "vyanjan" ? "default" : "ghost"}
                     onClick={() => setShowLetterType("vyanjan")}
                     className="rounded-full font-devanagari px-6"
                   >
-                    व्यंजन
+                    व्यंजन ({vyanjan.length})
                   </Button>
-                </div>
+                </motion.div>
               </div>
 
               {/* Letter grid */}
@@ -132,6 +173,7 @@ export default function Index() {
                       key={letter.letter}
                       letter={letter}
                       index={index}
+                      onClick={() => handleLetterClick(letter)}
                     />
                   ))}
                 </motion.div>

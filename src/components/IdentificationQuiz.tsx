@@ -271,11 +271,6 @@ export function IdentificationQuiz() {
           )}
         </AnimatePresence>
       </motion.div>
-
-      {/* Hint */}
-      <p className="text-center text-sm text-muted-foreground mt-4 font-devanagari">
-        💡 टीप: उच्चार ऐकण्यासाठी पुन्हा बटण दाबा
-      </p>
     </div>
   );
 }
