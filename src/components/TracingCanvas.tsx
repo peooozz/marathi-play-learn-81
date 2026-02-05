@@ -100,7 +100,7 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
     ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
     ctx.lineTo(coords.x, coords.y);
     ctx.strokeStyle = currentColor;
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 14;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.stroke();
