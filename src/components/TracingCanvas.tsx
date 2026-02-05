@@ -23,6 +23,32 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
   const [currentColor, setCurrentColor] = useState(colors[0].value);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
+  const letterMaskRef = useRef<ImageData | null>(null);
+
+  const createLetterMask = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Create temporary canvas for mask
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) return;
+
+    // Draw solid letter on temp canvas for mask detection
+    tempCtx.fillStyle = "#000000";
+    tempCtx.font = "bold 220px 'Noto Sans Devanagari', sans-serif";
+    tempCtx.textAlign = "center";
+    tempCtx.textBaseline = "middle";
+    tempCtx.fillText(letter, tempCanvas.width / 2, tempCanvas.height / 2);
+
+    // Store the mask data
+    letterMaskRef.current = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  }, [letter]);
 
   const drawGuideLetter = useCallback(() => {
     const canvas = canvasRef.current;
@@ -31,28 +57,55 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
+    // Clear canvas with white background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw guide letter (large, faded)
-    ctx.font = "bold 200px 'Noto Sans Devanagari', sans-serif";
-    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    // Draw guide letter (large, faded) - centered
+    ctx.font = "bold 220px 'Noto Sans Devanagari', sans-serif";
+    ctx.fillStyle = "rgba(200, 200, 200, 0.4)";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(letter, canvas.width / 2, canvas.height / 2);
 
-    // Draw dotted outline
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
-    ctx.lineWidth = 3;
-    ctx.setLineDash([8, 8]);
+    // Draw dotted outline for tracing guide
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 6]);
     ctx.strokeText(letter, canvas.width / 2, canvas.height / 2);
     ctx.setLineDash([]);
-  }, [letter]);
+
+    // Create mask for boundary detection
+    createLetterMask();
+  }, [letter, createLetterMask]);
 
   useEffect(() => {
     drawGuideLetter();
   }, [drawGuideLetter]);
+
+  const isPointInLetter = (x: number, y: number): boolean => {
+    if (!letterMaskRef.current) return true;
+    
+    const maskData = letterMaskRef.current;
+    const pixelIndex = (Math.floor(y) * maskData.width + Math.floor(x)) * 4;
+    
+    // Check if pixel is part of the letter (alpha > 0 means it's part of letter)
+    // We'll be more lenient - allow drawing within 20px of letter bounds
+    const checkRadius = 20;
+    for (let dx = -checkRadius; dx <= checkRadius; dx++) {
+      for (let dy = -checkRadius; dy <= checkRadius; dy++) {
+        const checkX = Math.floor(x + dx);
+        const checkY = Math.floor(y + dy);
+        if (checkX >= 0 && checkX < maskData.width && checkY >= 0 && checkY < maskData.height) {
+          const idx = (checkY * maskData.width + checkX) * 4;
+          if (maskData.data[idx + 3] > 0) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
 
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
@@ -81,8 +134,11 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
     const coords = getCoordinates(e);
     if (!coords) return;
 
-    setIsDrawing(true);
-    lastPoint.current = coords;
+    // Only start drawing if point is within or near the letter
+    if (isPointInLetter(coords.x, coords.y)) {
+      setIsDrawing(true);
+      lastPoint.current = coords;
+    }
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
@@ -96,11 +152,16 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
     const coords = getCoordinates(e);
     if (!coords) return;
 
+    // Only draw if point is within or near the letter boundary
+    if (!isPointInLetter(coords.x, coords.y)) {
+      return;
+    }
+
     ctx.beginPath();
     ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
     ctx.lineTo(coords.x, coords.y);
     ctx.strokeStyle = currentColor;
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 18;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.stroke();
@@ -119,12 +180,12 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative">
+      <div className="relative flex justify-center">
         <motion.canvas
           ref={canvasRef}
-          width={320}
-          height={320}
-          className="tracing-canvas border-4 border-dashed border-primary/30 rounded-3xl bg-card shadow-card"
+          width={350}
+          height={350}
+          className="tracing-canvas border-4 border-dashed border-primary/30 rounded-3xl bg-white shadow-card"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -132,18 +193,18 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
         />
         
         {/* Letter indicator */}
         <motion.div
-          className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl bg-primary shadow-playful flex items-center justify-center"
-          animate={{ rotate: [0, -5, 5, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute -top-4 -right-4 w-14 h-14 rounded-2xl bg-primary shadow-playful flex items-center justify-center"
+          animate={{ rotate: [0, -3, 3, 0] }}
+          transition={{ duration: 3, repeat: Infinity }}
         >
-          <span className="text-2xl font-devanagari font-bold text-primary-foreground">
+          <span className="text-xl font-devanagari font-bold text-primary-foreground">
             {letter}
           </span>
         </motion.div>
@@ -175,7 +236,7 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-card p-3 rounded-2xl shadow-hover flex gap-2"
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-card p-3 rounded-2xl shadow-hover flex gap-2 z-10"
             >
               {colors.map((color) => (
                 <button
@@ -206,7 +267,7 @@ export function TracingCanvas({ letter, onComplete }: TracingCanvasProps) {
       </div>
 
       <p className="text-sm text-muted-foreground font-devanagari">
-        बोटाने किंवा माउसने अक्षर काढा
+        अक्षराच्या आत बोटाने किंवा माउसने गिरवा
       </p>
     </div>
   );

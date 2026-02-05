@@ -243,3 +243,36 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.5);
 }
+
+/* Print styles for worksheets */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  /* Hide fixed elements during print */
+  .fixed {
+    position: static !important;
+  }
+  
+  /* Ensure good print layout */
+  .container {
+    max-width: 100% !important;
+    padding: 20px !important;
+  }
+  
+  /* Hide decorations during print */
+  .pointer-events-none {
+    display: none !important;
+  }
+}

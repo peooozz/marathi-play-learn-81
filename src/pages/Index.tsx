@@ -20,11 +20,19 @@ export default function Index() {
     setSelectedLetter(letter);
     setIsModalOpen(true);
     
-    // Play pronunciation
+    // Cancel any ongoing speech and play proper Marathi pronunciation
+    speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(letter.letter);
     utterance.lang = "mr-IN";
-    utterance.rate = 0.6;
+    utterance.rate = 0.4;
+    utterance.pitch = 1.1;
     speechSynthesis.speak(utterance);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedLetter(null);
   };
 
   return (
@@ -35,31 +43,19 @@ export default function Index() {
       <header className="relative z-10 pt-8 pb-4 px-4">
         <div className="container mx-auto max-w-5xl">
           <motion.button
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01, y: -2 }}
+            whileTap={{ scale: 0.99 }}
             onClick={() => setIsTracingOpen(true)}
-            className="w-full bg-card rounded-3xl p-6 shadow-card text-center cursor-pointer hover:shadow-hover transition-all duration-300 border-2 border-transparent hover:border-primary/30"
+            className="w-full bg-card rounded-3xl p-6 shadow-card text-center cursor-pointer hover:shadow-hover transition-all duration-200 border-2 border-transparent hover:border-primary/30"
           >
             <div className="flex items-center justify-center gap-3 mb-2">
-              <motion.span
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-3xl"
-              >
-                ✏️
-              </motion.span>
+              <span className="text-3xl">✏️</span>
               <h1 className="text-3xl md:text-4xl font-bold font-devanagari">
                 अक्षर गिरवायला शिका!
               </h1>
-              <motion.span
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-3xl"
-              >
-                📝
-              </motion.span>
+              <span className="text-3xl">📝</span>
             </div>
             <p className="text-muted-foreground font-devanagari flex items-center justify-center gap-2">
               <Pencil className="w-4 h-4" />
@@ -76,37 +72,25 @@ export default function Index() {
       <LetterDetailModal 
         letter={selectedLetter} 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={closeModal} 
       />
 
       {/* Rainbow Title */}
       <div className="text-center py-6 relative z-10">
         <motion.h2
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-4xl md:text-5xl font-bold font-devanagari inline-flex items-center gap-3"
         >
-          <motion.span 
-            className="text-4xl"
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          >
-            🌈
-          </motion.span>
+          <span className="text-4xl">🌈</span>
           <span className="text-gradient">मराठी मूळाक्षरे शिका!</span>
-          <motion.span 
-            className="text-4xl"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            ⭐
-          </motion.span>
+          <span className="text-4xl">⭐</span>
         </motion.h2>
         <motion.p 
           className="text-muted-foreground font-devanagari mt-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.2 }}
         >
           🌟 चित्र आणि उच्चार पाहण्यासाठी अक्षरावर क्लिक करा! 🌟
         </motion.p>
@@ -140,7 +124,7 @@ export default function Index() {
               <div className="flex justify-center mb-6">
                 <motion.div 
                   className="bg-card rounded-full p-1 shadow-card inline-flex"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.01 }}
                 >
                   <Button
                     variant={showLetterType === "swar" ? "default" : "ghost"}
@@ -163,9 +147,9 @@ export default function Index() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={showLetterType}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  exit={{ opacity: 0, y: -15 }}
                   className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-3 md:gap-4 max-w-4xl mx-auto"
                 >
                   {(showLetterType === "swar" ? swar : vyanjan).map((letter, index) => (
