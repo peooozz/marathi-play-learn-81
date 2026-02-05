@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Star, Puzzle, BookOpen, PenLine, ArrowLeft } from "lucide-react";
+import { Sparkles, Star, Puzzle, BookOpen, PenLine, ArrowLeft, Hash, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MatchingWorksheet } from "./MatchingWorksheet";
 import { IdentificationQuiz } from "./IdentificationQuiz";
 import { FillInBlanks } from "./FillInBlanks";
+import { CountingGame } from "./CountingGame";
+import { PictureMatch } from "./PictureMatch";
 
-type WorksheetType = "menu" | "matching" | "quiz" | "fillblanks";
+type WorksheetType = "menu" | "matching" | "quiz" | "fillblanks" | "counting" | "picturematch";
 
 const worksheetItems = [
   {
@@ -32,6 +34,22 @@ const worksheetItems = [
     icon: PenLine,
     color: "bg-kid-orange",
     emoji: "✏️",
+  },
+  {
+    id: "counting",
+    title: "मोजणी खेळ",
+    description: "चित्र मोजा आणि अंक निवडा",
+    icon: Hash,
+    color: "bg-kid-purple",
+    emoji: "🔢",
+  },
+  {
+    id: "picturematch",
+    title: "चित्र ओळखा",
+    description: "चित्र बघा आणि अक्षर निवडा",
+    icon: Image,
+    color: "bg-kid-green",
+    emoji: "🖼️",
   },
 ];
 
@@ -84,6 +102,26 @@ export function WorksheetSection() {
           >
             {renderBackButton()}
             <FillInBlanks />
+          </motion.div>
+        );
+      case "counting":
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {renderBackButton()}
+            <CountingGame />
+          </motion.div>
+        );
+      case "picturematch":
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {renderBackButton()}
+            <PictureMatch />
           </motion.div>
         );
       default:
