@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Volume2 } from "lucide-react";
+import { X, Volume2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TracingCanvas } from "@/components/TracingCanvas";
 import { swar, vyanjan, MarathiLetter } from "@/data/marathiLetters";
@@ -24,12 +24,110 @@ const flashcardColors = [
 export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
   const [showLetterType, setShowLetterType] = useState<"swar" | "vyanjan">("swar");
   const [selectedLetter, setSelectedLetter] = useState<MarathiLetter>(swar[0]);
+  const printRef = useRef<HTMLDivElement>(null);
 
-  const playPronunciation = (letter: string) => {
-    const utterance = new SpeechSynthesisUtterance(letter);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.7;
-    speechSynthesis.speak(utterance);
+  const playPronunciation = (letter: MarathiLetter) => {
+    // Cancel any ongoing speech
+    speechSynthesis.cancel();
+    
+    // Play the letter first
+    const letterUtterance = new SpeechSynthesisUtterance(letter.letter);
+    letterUtterance.lang = "mr-IN";
+    letterUtterance.rate = 0.4;
+    letterUtterance.pitch = 1.1;
+    speechSynthesis.speak(letterUtterance);
+
+    // Then play the word after a short delay
+    setTimeout(() => {
+      const wordUtterance = new SpeechSynthesisUtterance(`${letter.letter} म्हणजे ${letter.example}`);
+      wordUtterance.lang = "mr-IN";
+      wordUtterance.rate = 0.5;
+      wordUtterance.pitch = 1.0;
+      speechSynthesis.speak(wordUtterance);
+    }, 800);
+  };
+
+  const handlePrint = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html lang="mr">
+      <head>
+        <meta charset="UTF-8">
+        <title>मराठी अक्षर गिरवा - ${selectedLetter.letter}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+          @page { margin: 1cm; }
+          body { 
+            font-family: 'Noto Sans Devanagari', sans-serif; 
+            text-align: center; 
+            padding: 20px;
+          }
+          h1 { font-size: 24px; margin-bottom: 10px; }
+          .letter-display { 
+            font-size: 180px; 
+            font-weight: bold; 
+            color: #e0e0e0;
+            margin: 20px 0;
+            line-height: 1;
+          }
+          .word-display { font-size: 28px; margin: 15px 0; }
+          .emoji-display { font-size: 60px; margin: 10px 0; }
+          .tracing-box {
+            width: 300px;
+            height: 300px;
+            border: 3px dashed #999;
+            border-radius: 20px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 200px;
+            font-weight: bold;
+            color: #ddd;
+          }
+          .practice-lines {
+            margin-top: 30px;
+          }
+          .practice-line {
+            height: 80px;
+            border-bottom: 2px dashed #ccc;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            padding-left: 20px;
+            font-size: 60px;
+            color: #eee;
+          }
+          .footer { 
+            margin-top: 30px; 
+            font-size: 14px; 
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>✏️ अक्षर गिरवा ✏️</h1>
+        <div class="word-display">${selectedLetter.letter} म्हणजे ${selectedLetter.example}</div>
+        <div class="emoji-display">${selectedLetter.emoji}</div>
+        <div class="tracing-box">${selectedLetter.letter}</div>
+        <div class="practice-lines">
+          <div class="practice-line">${selectedLetter.letter}</div>
+          <div class="practice-line">${selectedLetter.letter}</div>
+          <div class="practice-line">${selectedLetter.letter}</div>
+        </div>
+        <div class="footer">📚 मराठी शिका - लहान मुलांसाठी ❤️</div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    }
   };
 
   const currentLetters = showLetterType === "swar" ? swar : vyanjan;
@@ -42,7 +140,7 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 overflow-y-auto"
+        className="fixed inset-0 bg-background/98 backdrop-blur-sm z-50 overflow-y-auto"
       >
         <div className="container mx-auto max-w-6xl px-4 py-6">
           {/* Header */}
@@ -54,14 +152,24 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
             >
               ✏️ अक्षर गिरवा
             </motion.h2>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onClose}
-              className="rounded-full h-12 w-12"
-            >
-              <X className="h-6 w-6" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handlePrint}
+                className="rounded-full gap-2 font-devanagari"
+              >
+                <Printer className="h-4 w-4" />
+                <span className="hidden sm:inline">प्रिंट करा</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onClose}
+                className="rounded-full h-12 w-12"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
           </div>
 
           {/* Letter type toggle */}
@@ -75,7 +183,7 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
                 }}
                 className="rounded-full font-devanagari px-8 py-2 text-lg"
               >
-                स्वर
+                स्वर ({swar.length})
               </Button>
               <Button
                 variant={showLetterType === "vyanjan" ? "default" : "ghost"}
@@ -85,7 +193,7 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
                 }}
                 className="rounded-full font-devanagari px-8 py-2 text-lg"
               >
-                व्यंजन
+                व्यंजन ({vyanjan.length})
               </Button>
             </div>
           </div>
@@ -106,14 +214,14 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
                   return (
                     <motion.button
                       key={letter.letter}
-                      initial={{ opacity: 0, scale: 0.8 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.02 }}
+                      transition={{ delay: index * 0.015 }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setSelectedLetter(letter);
-                        playPronunciation(letter.letter);
+                        playPronunciation(letter);
                       }}
                       className={`
                         relative aspect-square rounded-xl ${colorClass} p-1 text-white
@@ -121,7 +229,6 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
                         ${isSelected ? "ring-4 ring-foreground/30 shadow-playful scale-105" : "shadow-card"}
                       `}
                     >
-                      {/* Decorative dots */}
                       <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-white/20" />
                       
                       <div className="flex flex-col items-center justify-center h-full">
@@ -133,7 +240,6 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
                         </span>
                       </div>
 
-                      {/* Sound indicator */}
                       <Volume2 className="absolute bottom-1 right-1 w-3 h-3 text-white/60" />
                     </motion.button>
                   );
@@ -141,10 +247,10 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
               </div>
             </motion.div>
 
-            {/* Tracing canvas */}
-            <div className="lg:w-[400px] flex flex-col items-center">
+            {/* Tracing canvas - centered */}
+            <div className="lg:w-[420px] flex flex-col items-center" ref={printRef}>
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-card rounded-3xl p-6 shadow-card w-full"
               >
@@ -152,16 +258,18 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
                   <span className="text-6xl font-devanagari font-bold text-primary">
                     {selectedLetter.letter}
                   </span>
-                  <p className="text-muted-foreground font-devanagari mt-1">
-                    {selectedLetter.example}
+                  <p className="text-muted-foreground font-devanagari mt-1 text-lg">
+                    {selectedLetter.letter} म्हणजे {selectedLetter.example} {selectedLetter.emoji}
                   </p>
                 </div>
 
-                <TracingCanvas letter={selectedLetter.letter} />
+                <div className="flex justify-center">
+                  <TracingCanvas letter={selectedLetter.letter} />
+                </div>
 
                 <Button
                   variant="outline"
-                  onClick={() => playPronunciation(selectedLetter.letter)}
+                  onClick={() => playPronunciation(selectedLetter)}
                   className="w-full mt-4 rounded-full gap-2 font-devanagari"
                 >
                   <Volume2 className="w-5 h-5" />
