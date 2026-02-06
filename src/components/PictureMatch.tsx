@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, RotateCcw, Trophy, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { swar, vyanjan, MarathiLetter } from "@/data/marathiLetters";
+import { speakMarathi, speakFeedback } from "@/lib/marathiSpeech";
 
 const cardColors = [
   "bg-kid-red",
@@ -49,10 +50,7 @@ export function PictureMatch() {
   }
 
   const playPronunciation = (text: string) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.7;
-    speechSynthesis.speak(utterance);
+    speakMarathi(text, { rate: 0.6, pitch: 1.1 });
   };
 
   const handleAnswer = (option: MarathiLetter) => {
@@ -64,7 +62,7 @@ export function PictureMatch() {
 
     if (correct) {
       setScore((s) => s + 10);
-      playPronunciation("शाब्बास!");
+      speakFeedback("शाब्बास!");
     }
 
     setTimeout(() => {

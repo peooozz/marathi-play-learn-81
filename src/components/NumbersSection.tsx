@@ -1,13 +1,11 @@
 import { motion } from "framer-motion";
 import { Volume2 } from "lucide-react";
 import { ankh } from "@/data/marathiLetters";
+import { speakMarathi } from "@/lib/marathiSpeech";
 
 export function NumbersSection() {
   const playPronunciation = (word: string) => {
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.7;
-    speechSynthesis.speak(utterance);
+    speakMarathi(word, { rate: 0.6, pitch: 1.1 });
   };
 
   const colors = [

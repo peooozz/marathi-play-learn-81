@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, RotateCcw, Trophy, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fillBlankQuestions, FillBlankQuestion, vyanjan, swar } from "@/data/marathiLetters";
+import { speakMarathi, speakFeedback } from "@/lib/marathiSpeech";
 
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -66,9 +67,7 @@ export function FillInBlanks() {
       setScore(prev => prev + 10);
       
       // Play success sound
-      const utterance = new SpeechSynthesisUtterance("शाब्बास!");
-      utterance.lang = "mr-IN";
-      speechSynthesis.speak(utterance);
+      speakFeedback("शाब्बास!");
       
       if ((score + 10) % 50 === 0) {
         setShowCelebration(true);
@@ -77,10 +76,7 @@ export function FillInBlanks() {
     } else {
       // Play correct pronunciation
       setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(currentQuestion.word);
-        utterance.lang = "mr-IN";
-        utterance.rate = 0.6;
-        speechSynthesis.speak(utterance);
+        speakMarathi(currentQuestion.word, { rate: 0.55, pitch: 1.1 });
       }, 500);
     }
   };

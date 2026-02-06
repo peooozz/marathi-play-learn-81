@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle, Volume2, RotateCcw, Trophy, Star } from "lucide-
 import { Button } from "@/components/ui/button";
 import { allLetters, MarathiLetter } from "@/data/marathiLetters";
 import { Progress } from "@/components/ui/progress";
+import { speakMarathi } from "@/lib/marathiSpeech";
 
 interface QuizQuestion {
   correctLetter: MarathiLetter;
@@ -37,10 +38,7 @@ export function IdentificationQuiz() {
   const [showCelebration, setShowCelebration] = useState(false);
 
   const playSound = useCallback((letter: string) => {
-    const utterance = new SpeechSynthesisUtterance(letter);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.6;
-    speechSynthesis.speak(utterance);
+    speakMarathi(letter, { rate: 0.5, pitch: 1.2 });
   }, []);
 
   const playQuestionSound = useCallback(() => {

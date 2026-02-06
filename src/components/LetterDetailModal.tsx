@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarathiLetter } from "@/data/marathiLetters";
+import { speakLetterWithWord } from "@/lib/marathiSpeech";
 
 interface LetterDetailModalProps {
   letter: MarathiLetter | null;
@@ -24,26 +25,7 @@ export function LetterDetailModal({ letter, isOpen, onClose }: LetterDetailModal
   if (!letter) return null;
 
   const playPronunciation = () => {
-    // Cancel any ongoing speech
-    speechSynthesis.cancel();
-
-    // Play the letter with proper Marathi pronunciation
-    const letterUtterance = new SpeechSynthesisUtterance(letter.letter);
-    letterUtterance.lang = "mr-IN";
-    letterUtterance.rate = 0.4;
-    letterUtterance.pitch = 1.1;
-    speechSynthesis.speak(letterUtterance);
-
-    // Then play the full word after a delay
-    setTimeout(() => {
-      const wordUtterance = new SpeechSynthesisUtterance(
-        `${letter.letter} म्हणजे ${letter.example}`
-      );
-      wordUtterance.lang = "mr-IN";
-      wordUtterance.rate = 0.5;
-      wordUtterance.pitch = 1.0;
-      speechSynthesis.speak(wordUtterance);
-    }, 800);
+    speakLetterWithWord(letter.letter, letter.example);
   };
 
   const gradientClass = colorMap[letter.color] || "from-primary to-accent";
