@@ -137,8 +137,8 @@ export function speakLetterWithWord(letter: string, example: string): void {
 export function speakFeedback(text: string): void {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "mr-IN";
-  utterance.rate = 0.7;
-  utterance.pitch = 1.2;
+  utterance.rate = 1;
+  utterance.pitch = 1;
 
   const voice = getMarathiVoice();
   if (voice) {
