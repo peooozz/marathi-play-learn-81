@@ -14,6 +14,35 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+// Properly segment Devanagari text into grapheme clusters
+// This handles consonants with vowel marks (matras) as single units
+function segmentDevanagari(text: string): string[] {
+  // Use Intl.Segmenter if available (modern browsers)
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    try {
+      // @ts-ignore - Intl.Segmenter is not in all TypeScript versions
+      const segmenter = new (Intl as any).Segmenter('mr', { granularity: 'grapheme' });
+      return Array.from(segmenter.segment(text), (s: any) => s.segment);
+    } catch {
+      // Fall through to regex method
+    }
+  }
+  
+  // Fallback regex for Devanagari grapheme clusters
+  // Matches: base consonant/vowel + optional nukta + optional halant sequences + optional vowel signs
+  const results: string[] = [];
+  
+  // Pattern to match complete Devanagari grapheme clusters
+  const pattern = /(?:[\u0915-\u0939\u0958-\u095F][\u093C]?(?:[\u094D][\u0915-\u0939\u0958-\u095F][\u093C]?)*[\u093E-\u094C\u094D]?)|[\u0905-\u0914\u0900-\u0903]|./gu;
+  
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    results.push(match[0]);
+  }
+  
+  return results;
+}
+
 export function FillInBlanks() {
   const [currentQuestion, setCurrentQuestion] = useState<FillBlankQuestion | null>(null);
   const [options, setOptions] = useState<string[]>([]);
@@ -95,42 +124,46 @@ export function FillInBlanks() {
   const renderWord = () => {
     if (!currentQuestion) return null;
     
-    const chars = currentQuestion.word.split("");
+    // Use proper Devanagari segmentation instead of split("")
+    const graphemes = segmentDevanagari(currentQuestion.word);
     const blankPosition = currentQuestion.blanks[0].position;
+    const correctLetter = currentQuestion.blanks[0].letter;
     
     return (
-      <div className="flex items-center justify-center gap-2 text-5xl font-devanagari font-bold">
-        {chars.map((char, index) => (
+      <div className="flex items-center justify-center gap-1 text-5xl font-devanagari font-bold">
+        {graphemes.map((grapheme, index) => (
           <motion.span
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className={index === blankPosition ? "relative" : ""}
+            className="inline-flex items-center justify-center"
           >
             {index === blankPosition ? (
               <span className={`
-                inline-block w-16 h-16 border-4 border-dashed rounded-xl
-                flex items-center justify-center
+                inline-flex items-center justify-center
+                min-w-[3.5rem] h-14 px-2 border-4 border-dashed rounded-2xl
                 ${selectedAnswer 
                   ? isCorrect 
                     ? "border-kid-green bg-kid-green/20 text-kid-green" 
                     : "border-kid-red bg-kid-red/20"
-                  : "border-primary bg-primary/10 animate-pulse"
+                  : "border-primary/50 bg-primary/5"
                 }
               `}>
-                {selectedAnswer && (
+                {selectedAnswer ? (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className={isCorrect ? "text-kid-green" : "text-kid-red"}
                   >
-                    {isCorrect ? currentQuestion.blanks[0].letter : selectedAnswer}
+                    {isCorrect ? correctLetter : selectedAnswer}
                   </motion.span>
+                ) : (
+                  <span className="text-muted-foreground/30">?</span>
                 )}
               </span>
             ) : (
-              char
+              <span>{grapheme}</span>
             )}
           </motion.span>
         ))}
