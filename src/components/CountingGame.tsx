@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, RotateCcw, Trophy, Star, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { speakMarathi, speakFeedback } from "@/lib/marathiSpeech";
 
 const marathiNumbers = [
   { number: "१", word: "एक", value: 1, emojis: ["🍎"] },
@@ -59,10 +60,7 @@ export function CountingGame() {
   }
 
   const playPronunciation = (text: string) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.7;
-    speechSynthesis.speak(utterance);
+    speakMarathi(text, { rate: 0.6, pitch: 1.1 });
   };
 
   const handleAnswer = (value: number) => {
@@ -74,7 +72,7 @@ export function CountingGame() {
 
     if (correct) {
       setScore((s) => s + 10);
-      playPronunciation("शाब्बास!");
+      speakFeedback("शाब्बास!");
     }
 
     setTimeout(() => {

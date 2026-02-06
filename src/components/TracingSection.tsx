@@ -4,6 +4,7 @@ import { X, Volume2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TracingCanvas } from "@/components/TracingCanvas";
 import { swar, vyanjan, MarathiLetter } from "@/data/marathiLetters";
+import { speakLetterWithWord } from "@/lib/marathiSpeech";
 
 interface TracingSectionProps {
   isOpen: boolean;
@@ -27,24 +28,7 @@ export function TracingSection({ isOpen, onClose }: TracingSectionProps) {
   const printRef = useRef<HTMLDivElement>(null);
 
   const playPronunciation = (letter: MarathiLetter) => {
-    // Cancel any ongoing speech
-    speechSynthesis.cancel();
-    
-    // Play the letter first
-    const letterUtterance = new SpeechSynthesisUtterance(letter.letter);
-    letterUtterance.lang = "mr-IN";
-    letterUtterance.rate = 0.4;
-    letterUtterance.pitch = 1.1;
-    speechSynthesis.speak(letterUtterance);
-
-    // Then play the word after a short delay
-    setTimeout(() => {
-      const wordUtterance = new SpeechSynthesisUtterance(`${letter.letter} म्हणजे ${letter.example}`);
-      wordUtterance.lang = "mr-IN";
-      wordUtterance.rate = 0.5;
-      wordUtterance.pitch = 1.0;
-      speechSynthesis.speak(wordUtterance);
-    }, 800);
+    speakLetterWithWord(letter.letter, letter.example);
   };
 
   const handlePrint = () => {

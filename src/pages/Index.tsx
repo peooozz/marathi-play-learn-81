@@ -9,6 +9,7 @@ import { TracingSection } from "@/components/TracingSection";
 import { FloatingDecorations } from "@/components/FloatingDecorations";
 import { LetterDetailModal } from "@/components/LetterDetailModal";
 import { swar, vyanjan, MarathiLetter } from "@/data/marathiLetters";
+import { speakMarathi } from "@/lib/marathiSpeech";
 
 export default function Index() {
   const [showLetterType, setShowLetterType] = useState<"swar" | "vyanjan">("swar");
@@ -20,14 +21,8 @@ export default function Index() {
     setSelectedLetter(letter);
     setIsModalOpen(true);
     
-    // Cancel any ongoing speech and play proper Marathi pronunciation
-    speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(letter.letter);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.4;
-    utterance.pitch = 1.1;
-    speechSynthesis.speak(utterance);
+    // Play proper Marathi female pronunciation
+    speakMarathi(letter.letter, { rate: 0.4, pitch: 1.2 });
   };
 
   const closeModal = () => {

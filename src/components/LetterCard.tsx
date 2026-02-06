@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Volume2 } from "lucide-react";
 import { MarathiLetter } from "@/data/marathiLetters";
+import { speakMarathi } from "@/lib/marathiSpeech";
 
 interface LetterCardProps {
   letter: MarathiLetter;
@@ -11,11 +12,7 @@ interface LetterCardProps {
 
 export function LetterCard({ letter, index, onSelect, isSelected }: LetterCardProps) {
   const playPronunciation = () => {
-    // Use Web Speech API for pronunciation
-    const utterance = new SpeechSynthesisUtterance(letter.letter);
-    utterance.lang = "mr-IN";
-    utterance.rate = 0.7;
-    speechSynthesis.speak(utterance);
+    speakMarathi(letter.letter, { rate: 0.5, pitch: 1.2 });
   };
 
   const colorClasses: Record<string, string> = {
